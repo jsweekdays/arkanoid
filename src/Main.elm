@@ -89,7 +89,7 @@ type alias Bar =
 
 
 type alias Block =
-    Positioned (Blocked {})
+    Blocked (Positioned {})
 
 
 type alias Boundary =
@@ -115,7 +115,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { ball = { x = 0, y = -ballRadius * 2, radius = ballRadius, vx = 0, vy = 0.25 }
+    ( { ball = { x = 0, y = -ballRadius * 2, radius = ballRadius, vx = 0, vy = 0.1 }
       , bar = { x = 0, y = -interfaceHeight / 2 + barHeight / 2, width = barWidth, height = barHeight, vx = 0, vy = 0 }
       , blocks =
             [ { x = 0, y = ballRadius * 2, width = blockWidth, height = blockHeight }
@@ -134,8 +134,9 @@ type Msg
     = Tick Time
     | KeyDown KeyCode
 
+
 extractBlockBoundary : Blocked (Positioned a) -> Boundary
-extractBlockBoundary {x, y, width, height} =
+extractBlockBoundary { x, y, width, height } =
     { left = x - width / 2
     , right = x + width / 2
     , top = y + height / 2
@@ -144,23 +145,27 @@ extractBlockBoundary {x, y, width, height} =
 
 
 extractRoundBoundary : Rounded (Positioned a) -> Boundary
-extractRoundBoundary {x, y, radius} =
+extractRoundBoundary { x, y, radius } =
     { left = x - radius / 2
     , right = x + radius / 2
     , top = y + radius / 2
     , bottom = y - radius / 2
     }
 
-intersection : Boundary -> Boundary -> Bool
-intersection b1 b2 =
-    b1.left
-        <= b2.right
-        && b2.left
-        <= b1.right
-        && b1.bottom
-        <= b2.top
-        && b2.bottom
-        <= b1.top
+
+vIntersection : ( Boundary, Boundary ) -> Bool
+vIntersection ( a, b ) =
+    a.bottom <= b.top && b.bottom <= a.top
+
+
+hIntersection : ( Boundary, Boundary ) -> Bool
+hIntersection ( a, b ) =
+    a.left <= b.right && b.left <= a.right
+
+
+intersection : ( Boundary, Boundary ) -> Bool
+intersection b =
+    vIntersection b && hIntersection b
 
 
 updatePositionByVelocity : Time -> Moved (Positioned a) -> Moved (Positioned a)
@@ -184,15 +189,77 @@ updateVelocityByCollision collision object =
             object
 
 
+findCollisionWithBlock : Rounded (Positioned a) -> Block -> Collision
+findCollisionWithBlock ball block =
+    let
+        boundaries =
+            ( extractRoundBoundary ball, extractBlockBoundary block )
+    in
+        if intersection boundaries then
+            if hIntersection boundaries then
+                Just Vertical
+            else if vIntersection boundaries then
+                Just Horizontal
+            else
+                Nothing
+        else
+            Nothing
+
+
+findCollisionWithBar ball bar =
+    let
+        boundaries =
+            ( extractRoundBoundary ball, extractBlockBoundary bar )
+    in
+        if intersection boundaries then
+            if hIntersection boundaries then
+                Just Vertical
+            else if vIntersection boundaries then
+                Just Horizontal
+            else
+                Nothing
+        else
+            Nothing
+
+
+findCollisionWithBlocks : Rounded (Positioned a) -> List Block -> Collision
+findCollisionWithBlocks ball blocks =
+    let
+        firstCollision =
+            blocks
+                |> List.map (\block -> findCollisionWithBlock ball block)
+                |> List.filter (\collision -> collision /= Nothing)
+                |> List.head
+    in
+        case firstCollision of
+            Just collision ->
+                collision
+            _ ->
+                Nothing
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick dt ->
-            ( { model
-                | ball = updatePositionByVelocity dt model.ball
-              }
-            , Cmd.none
-            )
+            let
+                futureBall =
+                    updatePositionByVelocity dt model.ball
+
+                blockCollsion =
+                    findCollisionWithBlocks futureBall model.blocks
+
+                barCollsion =
+                    findCollisionWithBar futureBall model.bar
+            in
+                ( { model
+                    | ball =
+                        futureBall
+                            |> updateVelocityByCollision barCollsion
+                            |> updateVelocityByCollision blockCollsion
+                  }
+                , Cmd.none
+                )
 
         KeyDown code ->
             if code == spaceKeyCode then
