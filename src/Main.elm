@@ -26,13 +26,24 @@ interfaceWidth =
 ---- MODEL ----
 
 
+type Status
+    = Start
+    | Play
+    | Failed
+    | Complete
+
+
 type alias Model =
-    {}
+    {
+      status: Status
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( {
+      status = Start
+    }, Cmd.none )
 
 
 
@@ -66,6 +77,21 @@ drawText =
         >> Collage.text
 
 
+drawStatus : Status -> Form
+drawStatus status =
+    case status of
+        Start ->
+            drawText "Press space key to play"
+
+        Play ->
+            drawText "Game is on.."
+
+        Failed ->
+            drawText "You lose!"
+
+        Complete ->
+            drawText "You win!"
+
 view : Model -> Html Msg
 view model =
     let
@@ -77,7 +103,7 @@ view model =
 
         forms =
             [ background
-            , drawText "Something will be here"
+            , drawStatus model.status
             ]
     in
         collage width height forms |> toHtml
