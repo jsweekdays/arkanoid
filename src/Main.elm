@@ -37,6 +37,33 @@ type Status
     | Failed
     | Complete
 
+type alias Positioned a =
+    { a | x : Float, y : Float }
+
+
+type alias Blocked a =
+    { a | width : Float, height : Float }
+
+
+type alias Speeded a =
+    { a | vx : Float, vy : Float }
+
+
+type alias Rounded a =
+    { a | radius : Float }
+
+
+type alias Ball =
+    Speeded (Rounded (Positioned {}))
+
+
+type alias Bar =
+    Speeded (Blocked (Positioned {}))
+
+
+type alias Block =
+    Positioned (Blocked {})
+
 
 type alias Model =
     {
@@ -49,6 +76,7 @@ init =
     ( {
       status = Start
     }, Cmd.none )
+
 
 
 
