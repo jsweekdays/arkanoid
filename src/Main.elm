@@ -166,37 +166,48 @@ drawStatus status =
         Complete ->
             drawText "You win!"
 
+
 drawBall : Ball -> Form
 drawBall { radius, x, y } =
-  circle radius
-  |> filled Color.red
-  |> move (x, y)
+    circle radius
+        |> filled Color.red
+        |> move ( x, y )
 
 
 drawBar : Bar -> Form
 drawBar { height, width, x, y } =
-  rect width height
-  |> filled Color.green
-  |> move (x, y)
+    rect width height
+        |> filled Color.green
+        |> move ( x, y )
 
 
-view : Model -> Html Msg
-view model =
+drawScene : List Form -> Html Msg
+drawScene forms =
     let
         height =
             ceiling interfaceHeight
 
         width =
             ceiling interfaceWidth
-
-        forms =
-            [ background
-            , drawBar model.bar
-            , drawBall model.ball
-            , drawStatus model.status
-            ]
     in
         collage width height forms |> toHtml
+
+
+view : Model -> Html Msg
+view model =
+    case model.status of
+        Play ->
+            drawScene
+                [ background
+                , drawBar model.bar
+                , drawBall model.ball
+                ]
+
+        _ ->
+            drawScene
+                [ background
+                , drawStatus model.status
+                ]
 
 
 
