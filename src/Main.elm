@@ -7,6 +7,7 @@ import Color
 import Time exposing (Time)
 import Text
 import Html exposing (..)
+import Keyboard exposing (KeyCode)
 
 
 ---- CONSTANTS ----
@@ -20,6 +21,10 @@ interfaceHeight =
 interfaceWidth : Float
 interfaceWidth =
     800
+
+spaceKeyCode : Int
+spaceKeyCode =
+    32
 
 
 
@@ -52,11 +57,20 @@ init =
 
 type Msg
     = Tick Time
+    | KeyDown KeyCode
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+      Tick dt ->
+          ( model, Cmd.none )
+
+      KeyDown code ->
+          if code == spaceKeyCode then
+              ( { model | status = Play }, Cmd.none )
+          else
+              ( model, Cmd.none )
 
 
 
@@ -124,6 +138,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ AnimationFrame.diffs Tick
+        , Keyboard.downs KeyDown
         ]
 
 
