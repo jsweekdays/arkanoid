@@ -22,9 +22,35 @@ interfaceWidth : Float
 interfaceWidth =
     800
 
+
 spaceKeyCode : Int
 spaceKeyCode =
     32
+
+
+barHeight : Float
+barHeight =
+    20
+
+
+barWidth : Float
+barWidth =
+    200
+
+
+blockHeight : Float
+blockHeight =
+    20
+
+
+blockWidth : Float
+blockWidth =
+    60
+
+
+ballRadius : Float
+ballRadius =
+    30
 
 
 
@@ -36,6 +62,7 @@ type Status
     | Play
     | Failed
     | Complete
+
 
 type alias Positioned a =
     { a | x : Float, y : Float }
@@ -66,17 +93,16 @@ type alias Block =
 
 
 type alias Model =
-    {
-      status: Status
+    { status : Status
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {
-      status = Start
-    }, Cmd.none )
-
+    ( { status = Start
+      }
+    , Cmd.none
+    )
 
 
 
@@ -91,14 +117,14 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-      Tick dt ->
-          ( model, Cmd.none )
+        Tick dt ->
+            ( model, Cmd.none )
 
-      KeyDown code ->
-          if code == spaceKeyCode then
-              ( { model | status = Play }, Cmd.none )
-          else
-              ( model, Cmd.none )
+        KeyDown code ->
+            if code == spaceKeyCode then
+                ( { model | status = Play }, Cmd.none )
+            else
+                ( model, Cmd.none )
 
 
 
@@ -133,6 +159,7 @@ drawStatus status =
 
         Complete ->
             drawText "You win!"
+
 
 view : Model -> Html Msg
 view model =
