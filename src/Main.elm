@@ -168,20 +168,25 @@ drawStatus status =
             drawText "You win!"
 
 
-drawBall : Ball -> Form
-drawBall { radius, x, y } =
+drawRounded : Rounded (Positioned a) -> Form
+drawRounded { radius, x, y } =
     group
         [ circle radius |> filled Color.red |> move ( x, y )
         , circle radius |> outlined outlineStyle |> move ( x, y )
         ]
 
-drawBar : Bar -> Form
-drawBar { height, width, x, y } =
+drawBlocked : Blocked (Positioned a) -> Form
+drawBlocked { height, width, x, y } =
     group
         [ rect width height |> filled Color.grey |> move ( x, y )
         , rect width height |> outlined outlineStyle |> move ( x, y )
         ]
 
+drawBlockedList : List (Blocked (Positioned a)) -> Form
+drawBlockedList blocks =
+  blocks
+  |> List.map drawBlocked
+  |> group
 
 drawScene : List Form -> Html Msg
 drawScene forms =
@@ -201,8 +206,9 @@ view model =
         Play ->
             drawScene
                 [ background
-                , drawBar model.bar
-                , drawBall model.ball
+                , drawBlockedList model.blocks
+                , drawBlocked model.bar
+                , drawRounded model.ball
                 ]
 
         _ ->
