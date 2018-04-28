@@ -136,6 +136,7 @@ update msg model =
 
 ---- VIEW ----
 
+outlineStyle = { defaultLine | width = 2 , color = Color.black}
 
 background : Form
 background =
@@ -169,16 +170,17 @@ drawStatus status =
 
 drawBall : Ball -> Form
 drawBall { radius, x, y } =
-    circle radius
-        |> filled Color.red
-        |> move ( x, y )
-
+    group
+        [ circle radius |> filled Color.red |> move ( x, y )
+        , circle radius |> outlined outlineStyle |> move ( x, y )
+        ]
 
 drawBar : Bar -> Form
 drawBar { height, width, x, y } =
-    rect width height
-        |> filled Color.green
-        |> move ( x, y )
+    group
+        [ rect width height |> filled Color.grey |> move ( x, y )
+        , rect width height |> outlined outlineStyle |> move ( x, y )
+        ]
 
 
 drawScene : List Form -> Html Msg
