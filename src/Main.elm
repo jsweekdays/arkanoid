@@ -93,13 +93,19 @@ type alias Block =
 
 
 type alias Model =
-    { status : Status
+    { ball : Ball
+    , bar : Bar
+    , blocks : List Block
+    , status : Status
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { status = Start
+    ( { ball = { x = 0, y = 0, radius = 30, vx = 0, vy = 0 }
+      , bar = { x = 0, y = -interfaceHeight / 2 + barHeight / 2, width = barWidth, height = barHeight, vx = 0, vy = 0 }
+      , blocks = []
+      , status = Start
       }
     , Cmd.none
     )
