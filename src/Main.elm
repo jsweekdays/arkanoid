@@ -1,9 +1,25 @@
 module Main exposing (..)
 
 import AnimationFrame
+import Collage exposing (..)
+import Element exposing (..)
+import Color
 import Time exposing (Time)
-import Html exposing (Html, text, div, h1, img)
-import Html.Attributes exposing (src)
+import Text
+import Html exposing (..)
+
+
+---- CONSTANTS ----
+
+
+interfaceHeight : Float
+interfaceHeight =
+    400
+
+
+interfaceWidth : Float
+interfaceWidth =
+    800
 
 
 ---- MODEL ----
@@ -11,7 +27,6 @@ import Html.Attributes exposing (src)
 
 type alias Model =
     {}
-
 
 init : ( Model, Cmd Msg )
 init =
@@ -31,16 +46,32 @@ update msg model =
     ( model, Cmd.none )
 
 
-
 ---- VIEW ----
 
+background : Form
+background =
+    rect interfaceHeight interfaceHeight
+        |> filled (Color.rgb 240 240 240)
+
+
+drawText : String -> Form
+drawText =
+    Text.fromString
+        >> Text.height 14
+        >> Text.monospace
+        >> Collage.text
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
-        ]
+  let
+    height = ceiling interfaceHeight
+    width = ceiling interfaceWidth
+    forms = [
+      background,
+      drawText "Something will be here"
+    ]
+  in
+    collage width height forms |> toHtml
 
 
 ---- SUBSCRIPTIONS ----
