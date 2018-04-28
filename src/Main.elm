@@ -72,7 +72,7 @@ type alias Blocked a =
     { a | width : Float, height : Float }
 
 
-type alias Speeded a =
+type alias Moved a =
     { a | vx : Float, vy : Float }
 
 
@@ -81,11 +81,11 @@ type alias Rounded a =
 
 
 type alias Ball =
-    Speeded (Rounded (Positioned {}))
+    Moved (Rounded (Positioned {}))
 
 
 type alias Bar =
-    Speeded (Blocked (Positioned {}))
+    Moved (Blocked (Positioned {}))
 
 
 type alias Block =
@@ -102,7 +102,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { ball = { x = 0, y = -ballRadius * 2, radius = ballRadius, vx = 0, vy = 0 }
+    ( { ball = { x = 0, y = -ballRadius * 2, radius = ballRadius, vx = 0, vy = 0.25 }
       , bar = { x = 0, y = -interfaceHeight / 2 + barHeight / 2, width = barWidth, height = barHeight, vx = 0, vy = 0 }
       , blocks =
             [ { x = 0, y = ballRadius * 2, width = blockWidth, height = blockHeight }
@@ -122,11 +122,23 @@ type Msg
     | KeyDown KeyCode
 
 
+updatePositionByVelocity : Time -> Moved (Positioned a) -> Moved (Positioned a)
+updatePositionByVelocity dt object =
+    { object
+        | x = object.x + object.vx * dt
+        , y = object.y + object.vy * dt
+    }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick dt ->
-            ( model, Cmd.none )
+            ( { model
+                | ball = updatePositionByVelocity dt model.ball
+              }
+            , Cmd.none
+            )
 
         KeyDown code ->
             if code == spaceKeyCode then
