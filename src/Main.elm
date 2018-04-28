@@ -102,10 +102,12 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { ball = { x = 0, y = 0, radius = 30, vx = 0, vy = 0 }
+    ( { ball = { x = 0, y = -ballRadius * 2, radius = ballRadius, vx = 0, vy = 0 }
       , bar = { x = 0, y = -interfaceHeight / 2 + barHeight / 2, width = barWidth, height = barHeight, vx = 0, vy = 0 }
-      , blocks = []
-      , status = Start
+      , blocks =
+            [ { x = 0, y = ballRadius * 2, width = blockWidth, height = blockHeight }
+            ]
+      , status = Play
       }
     , Cmd.none
     )
@@ -136,7 +138,10 @@ update msg model =
 
 ---- VIEW ----
 
-outlineStyle = { defaultLine | width = 2 , color = Color.black}
+
+outlineStyle =
+    { defaultLine | width = 2, color = Color.black }
+
 
 background : Form
 background =
@@ -175,6 +180,7 @@ drawRounded { radius, x, y } =
         , circle radius |> outlined outlineStyle |> move ( x, y )
         ]
 
+
 drawBlocked : Blocked (Positioned a) -> Form
 drawBlocked { height, width, x, y } =
     group
@@ -182,11 +188,13 @@ drawBlocked { height, width, x, y } =
         , rect width height |> outlined outlineStyle |> move ( x, y )
         ]
 
+
 drawBlockedList : List (Blocked (Positioned a)) -> Form
 drawBlockedList blocks =
-  blocks
-  |> List.map drawBlocked
-  |> group
+    blocks
+        |> List.map drawBlocked
+        |> group
+
 
 drawScene : List Form -> Html Msg
 drawScene forms =
