@@ -1,5 +1,7 @@
 module Main exposing (..)
 
+import AnimationFrame
+import Time exposing (Time)
 import Html exposing (Html, text, div, h1, img)
 import Html.Attributes exposing (src)
 
@@ -21,7 +23,7 @@ init =
 
 
 type Msg
-    = NoOp
+    = Tick Time
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -41,6 +43,14 @@ view model =
         ]
 
 
+---- SUBSCRIPTIONS ----
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ AnimationFrame.diffs Tick
+        ]
+
 
 ---- PROGRAM ----
 
@@ -51,5 +61,5 @@ main =
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
