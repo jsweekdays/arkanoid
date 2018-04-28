@@ -166,6 +166,19 @@ drawStatus status =
         Complete ->
             drawText "You win!"
 
+drawBall : Ball -> Form
+drawBall { radius, x, y } =
+  circle radius
+  |> filled Color.red
+  |> move (x, y)
+
+
+drawBar : Bar -> Form
+drawBar { height, width, x, y } =
+  rect width height
+  |> filled Color.green
+  |> move (x, y)
+
 
 view : Model -> Html Msg
 view model =
@@ -178,6 +191,8 @@ view model =
 
         forms =
             [ background
+            , drawBar model.bar
+            , drawBall model.ball
             , drawStatus model.status
             ]
     in
