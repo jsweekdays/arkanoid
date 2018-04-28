@@ -92,6 +92,19 @@ type alias Block =
     Positioned (Blocked {})
 
 
+type alias Boundary =
+    { top : Float, bottom : Float, left : Float, right : Float }
+
+
+type Direction
+    = Horizontal
+    | Vertical
+
+
+type alias Collision =
+    Maybe Direction
+
+
 type alias Model =
     { ball : Ball
     , bar : Bar
@@ -121,6 +134,34 @@ type Msg
     = Tick Time
     | KeyDown KeyCode
 
+extractBlockBoundary : Blocked (Positioned a) -> Boundary
+extractBlockBoundary {x, y, width, height} =
+    { left = x - width / 2
+    , right = x + width / 2
+    , top = y + height / 2
+    , bottom = y - height / 2
+    }
+
+
+extractRoundBoundary : Rounded (Positioned a) -> Boundary
+extractRoundBoundary {x, y, radius} =
+    { left = x - radius / 2
+    , right = x + radius / 2
+    , top = y + radius / 2
+    , bottom = y - radius / 2
+    }
+
+intersection : Boundary -> Boundary -> Bool
+intersection b1 b2 =
+    b1.left
+        <= b2.right
+        && b2.left
+        <= b1.right
+        && b1.bottom
+        <= b2.top
+        && b2.bottom
+        <= b1.top
+
 
 updatePositionByVelocity : Time -> Moved (Positioned a) -> Moved (Positioned a)
 updatePositionByVelocity dt object =
@@ -128,6 +169,19 @@ updatePositionByVelocity dt object =
         | x = object.x + object.vx * dt
         , y = object.y + object.vy * dt
     }
+
+
+updateVelocityByCollision : Collision -> Moved a -> Moved a
+updateVelocityByCollision collision object =
+    case collision of
+        Just Horizontal ->
+            { object | vx = (-1) * object.vx }
+
+        Just Vertical ->
+            { object | vy = (-1) * object.vy }
+
+        Nothing ->
+            object
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
