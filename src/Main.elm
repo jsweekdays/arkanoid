@@ -65,7 +65,7 @@ update msg model =
 
 background : Form
 background =
-    rect interfaceHeight interfaceHeight
+    rect interfaceWidth interfaceHeight
         |> filled (Color.rgb 240 240 240)
 
 
