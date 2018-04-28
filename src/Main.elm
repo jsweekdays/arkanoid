@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import AnimationFrame
 import Collage exposing (..)
@@ -22,11 +22,13 @@ interfaceWidth =
     800
 
 
+
 ---- MODEL ----
 
 
 type alias Model =
     {}
+
 
 init : ( Model, Cmd Msg )
 init =
@@ -46,7 +48,9 @@ update msg model =
     ( model, Cmd.none )
 
 
+
 ---- VIEW ----
+
 
 background : Form
 background =
@@ -61,26 +65,41 @@ drawText =
         >> Text.monospace
         >> Collage.text
 
+
 view : Model -> Html Msg
 view model =
-  let
-    height = ceiling interfaceHeight
-    width = ceiling interfaceWidth
-    forms = [
-      background,
-      drawText "Something will be here"
-    ]
-  in
-    collage width height forms |> toHtml
+    let
+        height =
+            ceiling interfaceHeight
+
+        width =
+            ceiling interfaceWidth
+
+        forms =
+            [ background
+            , drawText "Something will be here"
+            ]
+    in
+        collage width height forms |> toHtml
+
+
+
+---- PORTS ----
+
+
+port moveBar : (( Float, Float ) -> msg) -> Sub msg
+
 
 
 ---- SUBSCRIPTIONS ----
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ AnimationFrame.diffs Tick
         ]
+
 
 
 ---- PROGRAM ----
