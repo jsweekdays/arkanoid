@@ -8,7 +8,7 @@ import Time exposing (Time)
 import Text
 import Html exposing (..)
 import Keyboard exposing (KeyCode)
-
+import Physics exposing (..)
 
 ---- CONSTANTS ----
 
@@ -64,45 +64,20 @@ type Status
     | Complete
 
 
-type alias Positioned a =
-    { a | x : Float, y : Float }
-
-
-type alias Blocked a =
-    { a | width : Float, height : Float }
-
-
-type alias Moved a =
-    { a | vx : Float, vy : Float }
-
-
-type alias Rounded a =
-    { a | radius : Float }
-
 
 type alias Ball =
     Moved (Rounded (Positioned {}))
 
 
 type alias Bar =
-    Moved (Blocked (Positioned {}))
+    Moved (Boxed (Positioned {}))
 
 
 type alias Block =
-    Blocked (Positioned {})
+    Boxed (Positioned {})
 
 
-type alias Boundary =
-    { top : Float, bottom : Float, left : Float, right : Float }
 
-
-type Direction
-    = Horizontal
-    | Vertical
-
-
-type alias Collision =
-    Maybe Direction
 
 
 type alias Model =
@@ -133,60 +108,6 @@ init =
 type Msg
     = Tick Time
     | KeyDown KeyCode
-
-
-extractBlockBoundary : Blocked (Positioned a) -> Boundary
-extractBlockBoundary { x, y, width, height } =
-    { left = x - width / 2
-    , right = x + width / 2
-    , top = y + height / 2
-    , bottom = y - height / 2
-    }
-
-
-extractRoundBoundary : Rounded (Positioned a) -> Boundary
-extractRoundBoundary { x, y, radius } =
-    { left = x - radius / 2
-    , right = x + radius / 2
-    , top = y + radius / 2
-    , bottom = y - radius / 2
-    }
-
-
-vIntersection : ( Boundary, Boundary ) -> Bool
-vIntersection ( a, b ) =
-    a.bottom <= b.top && b.bottom <= a.top
-
-
-hIntersection : ( Boundary, Boundary ) -> Bool
-hIntersection ( a, b ) =
-    a.left <= b.right && b.left <= a.right
-
-
-intersection : ( Boundary, Boundary ) -> Bool
-intersection b =
-    vIntersection b && hIntersection b
-
-
-updatePositionByVelocity : Time -> Moved (Positioned a) -> Moved (Positioned a)
-updatePositionByVelocity dt object =
-    { object
-        | x = object.x + object.vx * dt
-        , y = object.y + object.vy * dt
-    }
-
-
-updateVelocityByCollision : Collision -> Moved a -> Moved a
-updateVelocityByCollision collision object =
-    case collision of
-        Just Horizontal ->
-            { object | vx = (-1) * object.vx }
-
-        Just Vertical ->
-            { object | vy = (-1) * object.vy }
-
-        Nothing ->
-            object
 
 
 findCollisionWithBlock : Rounded (Positioned a) -> Block -> Collision
@@ -314,18 +235,18 @@ drawRounded { radius, x, y } =
         ]
 
 
-drawBlocked : Blocked (Positioned a) -> Form
-drawBlocked { height, width, x, y } =
+drawBoxed : Boxed (Positioned a) -> Form
+drawBoxed { height, width, x, y } =
     group
         [ rect width height |> filled Color.grey |> move ( x, y )
         , rect width height |> outlined outlineStyle |> move ( x, y )
         ]
 
 
-drawBlockedList : List (Blocked (Positioned a)) -> Form
-drawBlockedList blocks =
+drawBoxedList : List (Boxed (Positioned a)) -> Form
+drawBoxedList blocks =
     blocks
-        |> List.map drawBlocked
+        |> List.map drawBoxed
         |> group
 
 
@@ -347,8 +268,8 @@ view model =
         Play ->
             drawScene
                 [ background
-                , drawBlockedList model.blocks
-                , drawBlocked model.bar
+                , drawBoxedList model.blocks
+                , drawBoxed model.bar
                 , drawRounded model.ball
                 ]
 
