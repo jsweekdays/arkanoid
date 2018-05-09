@@ -10,6 +10,7 @@ import Html exposing (..)
 import Keyboard exposing (KeyCode)
 import Physics exposing (..)
 
+
 ---- CONSTANTS ----
 
 
@@ -64,36 +65,31 @@ type Status
     | Complete
 
 
-
-type alias Ball =
-    Moved (Rounded (Positioned {}))
-
-
-type alias Bar =
-    Moved (Boxed (Positioned {}))
-
-
-type alias Block =
-    Boxed (Positioned {})
-
-
-
-
-
 type alias Model =
-    { ball : Ball
-    , bar : Bar
-    , blocks : List Block
+    { ball : Body
+    , bar : Body
+    , blocks : List Body
     , status : Status
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { ball = { x = 0, y = -ballRadius * 2, radius = ballRadius, vx = 0, vy = 0.1 }
-      , bar = { x = 0, y = -interfaceHeight / 2 + barHeight / 2, width = barWidth, height = barHeight, vx = 0, vy = 0 }
+    ( { ball =
+            { position = Position 0 (-ballRadius * 2)
+            , velocity = Velocity 0 0.1
+            , shape = Circle (CircleData ballRadius)
+            }
+      , bar =
+            { position = Position 0 (-interfaceHeight / 2 + barHeight / 2)
+            , velocity = Velocity 0 0
+            , shape = Rectangle (RectangleData barHeight barWidth)
+            }
       , blocks =
-            [ { x = 0, y = ballRadius * 2, width = blockWidth, height = blockHeight }
+            [ { position = Position 0 ballRadius
+              , velocity = Velocity 0 0
+              , shape = Rectangle (RectangleData blockHeight blockWidth)
+              }
             ]
       , status = Play
       }
@@ -110,54 +106,6 @@ type Msg
     | KeyDown KeyCode
 
 
-findCollisionWithBlock : Rounded (Positioned a) -> Block -> Collision
-findCollisionWithBlock ball block =
-    let
-        boundaries =
-            ( extractRoundBoundary ball, extractBlockBoundary block )
-    in
-        if intersection boundaries then
-            if hIntersection boundaries then
-                Just Vertical
-            else if vIntersection boundaries then
-                Just Horizontal
-            else
-                Nothing
-        else
-            Nothing
-
-
-findCollisionWithBar ball bar =
-    let
-        boundaries =
-            ( extractRoundBoundary ball, extractBlockBoundary bar )
-    in
-        if intersection boundaries then
-            if hIntersection boundaries then
-                Just Vertical
-            else if vIntersection boundaries then
-                Just Horizontal
-            else
-                Nothing
-        else
-            Nothing
-
-
-findCollisionWithBlocks : Rounded (Positioned a) -> List Block -> Collision
-findCollisionWithBlocks ball blocks =
-    let
-        firstCollision =
-            blocks
-                |> List.map (\block -> findCollisionWithBlock ball block)
-                |> List.filter (\collision -> collision /= Nothing)
-                |> List.head
-    in
-        case firstCollision of
-            Just collision ->
-                collision
-            _ ->
-                Nothing
-
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -165,19 +113,10 @@ update msg model =
         Tick dt ->
             let
                 futureBall =
-                    updatePositionByVelocity dt model.ball
-
-                blockCollsion =
-                    findCollisionWithBlocks futureBall model.blocks
-
-                barCollsion =
-                    findCollisionWithBar futureBall model.bar
+                    updatePositionByTime dt model.ball
             in
                 ( { model
-                    | ball =
-                        futureBall
-                            |> updateVelocityByCollision barCollsion
-                            |> updateVelocityByCollision blockCollsion
+                    | ball = futureBall
                   }
                 , Cmd.none
                 )
@@ -187,7 +126,6 @@ update msg model =
                 ( { model | status = Play }, Cmd.none )
             else
                 ( model, Cmd.none )
-
 
 
 ---- VIEW ----
@@ -227,27 +165,29 @@ drawStatus status =
             drawText "You win!"
 
 
-drawRounded : Rounded (Positioned a) -> Form
-drawRounded { radius, x, y } =
+drawCircle : Physics.Position -> CircleData -> Form
+drawCircle { x, y } { radius } =
     group
         [ circle radius |> filled Color.red |> move ( x, y )
         , circle radius |> outlined outlineStyle |> move ( x, y )
         ]
 
 
-drawBoxed : Boxed (Positioned a) -> Form
-drawBoxed { height, width, x, y } =
+drawRectangle : Physics.Position -> RectangleData -> Form
+drawRectangle { x, y } { height, width } =
     group
         [ rect width height |> filled Color.grey |> move ( x, y )
         , rect width height |> outlined outlineStyle |> move ( x, y )
         ]
 
+drawBody : Body -> Form
+drawBody body =
+  case body.shape of
+    Circle data ->
+      drawCircle body.position data
 
-drawBoxedList : List (Boxed (Positioned a)) -> Form
-drawBoxedList blocks =
-    blocks
-        |> List.map drawBoxed
-        |> group
+    Rectangle data ->
+      drawRectangle body.position data
 
 
 drawScene : List Form -> Html Msg
@@ -268,9 +208,9 @@ view model =
         Play ->
             drawScene
                 [ background
-                , drawBoxedList model.blocks
-                , drawBoxed model.bar
-                , drawRounded model.ball
+                , group <| List.map drawBody <| model.blocks
+                , drawBody model.bar
+                , drawBody model.ball
                 ]
 
         _ ->
